@@ -9,7 +9,31 @@ interface Coordinates {
 
 // TODO: Define a class for the Weather object
 class Weather {
+  cityName: string;
+  date: string;
+  temperature: number;
+  description: string;
+  icon: string;
+  humidity: number;
+  windSpeed: number;
 
+  constructor(
+    cityName: string,
+    date: string,
+    temperature: number,
+    description: string,
+    icon: string,
+    humidity: number,
+    windSpeed: number
+  ) {
+    this.cityName = cityName;
+    this.date = date;
+    this.temperature = temperature;
+    this.description = description;
+    this.icon = icon;
+    this.humidity = humidity;
+    this.windSpeed = windSpeed;
+  }
 }
 
 // TODO: Complete the WeatherService class
