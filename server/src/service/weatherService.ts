@@ -43,12 +43,12 @@ class WeatherService {
 
   private apiKey?: string;
 
-  private cityName?: string;
+  private city?: string;
 
   constructor() {
     this.baseURL = process.env.WEATHER_API_BASE_URL || '';
     this.apiKey = process.env.WEATHER_API_KEY || '';
-    this.cityName = '';
+    this.city = '';
   }
 
   // TODO: Create fetchLocationData method
@@ -56,8 +56,8 @@ class WeatherService {
     try {
       const response = await fetch(query);
       const locationData = await response.json();
+      return locationData;
 
-      return this.destructureLocationData(locationData[0]);
     } catch (err) {
       console.log('Error: ', err);
       return err;
@@ -74,7 +74,7 @@ class WeatherService {
 
   // TODO: Create buildGeocodeQuery method
   private buildGeocodeQuery(): string {
-    return `${this.baseURL}/geo/1.0/direct?q=${this.cityName}&limit=10&appid=${this.apiKey}`;
+    return `${this.baseURL}/geo/1.0/direct?q=${this.city}&limit=1&appid=${this.apiKey}`;
   }
 
   // TODO: Create buildWeatherQuery method
@@ -85,9 +85,7 @@ class WeatherService {
   // TODO: Create fetchAndDestructureLocationData method
   private async fetchAndDestructureLocationData() {
     try {
-      const response = await fetch(this.buildGeocodeQuery());
-      const locationData = await response.json();
-
+      const locationData = await this.fetchLocationData(this.buildGeocodeQuery());
       return this.destructureLocationData(locationData[0]);
     } catch (err) {
       console.log('Error: ', err);
@@ -98,8 +96,7 @@ class WeatherService {
   // TODO: Create fetchWeatherData method
   private async fetchWeatherData(coordinates: Coordinates) {
     try {
-      const response = await fetch(
-        `${this.baseURL}/onecall?lat=${coordinates.lat}&lon=${coordinates.lon}&exclude=minutely&appid=${this.apiKey}`
+      const response = await fetch(this.buildWeatherQuery(coordinates)
       );
 
       const weatherData = await response.json();
@@ -113,7 +110,7 @@ class WeatherService {
   // TODO: Build parseCurrentWeather method
   private parseCurrentWeather(response: any) {
     return new Weather(
-      this.cityName,
+      this.city!,
       new Date(response.current.dt * 1000).toLocaleDateString('en-US', {
         weekday: 'long',
         month: 'long',
@@ -129,39 +126,36 @@ class WeatherService {
 
   // TODO: Complete buildForecastArray method
   private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
-    const forecast = weatherData.map((day) => {
-      const date = new Date(day.dt * 1000).toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      });
-
-      return new Weather(
-        this.cityName,
-        date,
-        day.temp.day,
-        day.weather[0].description,
-        day.weather[0].icon,
-        day.humidity,
-        day.wind_speed
+    const forecastArray: Weather[] = weatherData.map((instance) => {
+      return new Weather (
+        currentWeather.cityName,
+        new Date(instance.dt * 1000).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        }),
+        instance.temp.day,
+        instance.weather[0].description,
+        instance.weather[0].icon,
+        instance.humidity,
+        instance.wind_speed
       );
     });
-
-    return forecast;
+    return forecastArray;
   }
 
   // TODO: Complete getWeatherForCity method
   async getWeatherForCity(city: string) {
     try {
-      this.cityName = city;
+      this.city = city;
 
-      const locationData = await this.fetchLocationData(city);
+      const coordinates = await this.fetchAndDestructureLocationData() as Coordinates;
 
-      const weatherData = await this.fetchWeatherData(locationData);
+      const weatherData = await this.fetchWeatherData(coordinates);
 
       const currentWeather = this.parseCurrentWeather(weatherData);
 
-      const forecast = this.buildForecastArray(currentWeather, weatherData);
+      const forecast = this.buildForecastArray(currentWeather, weatherData.daily);
 
       return forecast;
     } catch (err) {
