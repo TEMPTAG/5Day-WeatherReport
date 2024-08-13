@@ -1,1 +1,22 @@
-[]
+[
+	{
+		"name": "Phoenix",
+		"id": "f68c7105-0351-46ef-9bf6-bb1b1db53c75"
+	},
+	{
+		"name": "San Diego",
+		"id": "a3bcc787-fafb-4ad6-ba82-6b09d2e36df3"
+	},
+	{
+		"name": "Portland",
+		"id": "eb961930-0405-4ad1-91b0-6166a89f1265"
+	},
+	{
+		"name": "Tucson",
+		"id": "9f213e33-cf42-4d93-8105-15d6679be703"
+	},
+	{
+		"name": "Miami",
+		"id": "0dac2d10-0a6f-422d-a280-56e7170da564"
+	}
+]
