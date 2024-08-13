@@ -56,6 +56,7 @@ class WeatherService {
     try {
       const response = await fetch(query);
       const locationData = await response.json();
+      console.log('Location Data: ', locationData);
       return locationData;
 
     } catch (err) {
@@ -86,7 +87,7 @@ class WeatherService {
   private async fetchAndDestructureLocationData() {
     try {
       const locationData = await this.fetchLocationData(this.buildGeocodeQuery());
-      return this.destructureLocationData(locationData);
+      return this.destructureLocationData(locationData[0]);
     } catch (err) {
       console.log('Error: ', err);
       return err;
@@ -123,7 +124,8 @@ class WeatherService {
 
   // TODO: Complete buildForecastArray method
   private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
-    const forecastArray: Weather[] = weatherData.map((instance) => {
+    const noonData = weatherData.filter((instance) => instance.dt_txt.includes('12:00:00'));
+    const forecastArray: Weather[] = noonData.slice(0, 5).map((instance) => {
       return new Weather (
         currentWeather.cityName,
         instance.dt_txt,
