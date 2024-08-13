@@ -9,30 +9,31 @@ interface Coordinates {
 
 // TODO: Define a class for the Weather object
 class Weather {
-  cityName: string;
+  city: string;
   date: string;
-  temperature: number;
-  description: string;
   icon: string;
-  humidity: number;
+  iconDescription: string;
+  tempF: number;
   windSpeed: number;
+  humidity: number;
+
 
   constructor(
-    cityName: string,
+    city: string,
     date: string,
-    temperature: number,
-    description: string,
     icon: string,
-    humidity: number,
-    windSpeed: number
+    iconDescription: string,
+    tempF: number,
+    windSpeed: number,
+    humidity: number
   ) {
-    this.cityName = cityName;
-    this.date = date;
-    this.temperature = temperature;
-    this.description = description;
+    this.city = city;
+    this.date = new Date(date).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' });
     this.icon = icon;
-    this.humidity = humidity;
+    this.iconDescription = iconDescription;
+    this.tempF = tempF;
     this.windSpeed = windSpeed;
+    this.humidity = humidity;
   }
 }
 
@@ -43,12 +44,12 @@ class WeatherService {
 
   private apiKey?: string;
 
-  private cityName?: string;
+  private city?: string;
 
   constructor() {
     this.baseURL = process.env.API_BASE_URL || '';
     this.apiKey = process.env.API_KEY || '';
-    this.cityName = '';
+    this.city = '';
   }
 
   // TODO: Create fetchLocationData method
@@ -74,12 +75,12 @@ class WeatherService {
 
   // TODO: Create buildGeocodeQuery method
   private buildGeocodeQuery(): string {
-    return `${this.baseURL}/geo/1.0/direct?q=${this.cityName}&limit=1&appid=${this.apiKey}`;
+    return `${this.baseURL}/geo/1.0/direct?q=${this.city}&limit=1&appid=${this.apiKey}`;
   }
 
   // TODO: Create buildWeatherQuery method
   private buildWeatherQuery(coordinates: Coordinates): string {
-    return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&cnt=3&appid=${this.apiKey}&units=imperial`;
+    return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
   }
 
   // TODO: Create fetchAndDestructureLocationData method
@@ -112,26 +113,26 @@ class WeatherService {
     return new Weather(
       response.city.name,
       response.list[0].dt_txt,
-      response.list[0].main.temp,
-      response.list[0].weather[0].description,
       response.list[0].weather[0].icon,
-      response.list[0].main.humidity,
-      response.list[0].wind.speed
+      response.list[0].weather[0].description,
+      response.list[0].main.temp,
+      response.list[0].wind.speed,
+      response.list[0].main.humidity
     );
   }
 
   // TODO: Complete buildForecastArray method
   private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
-    const noonData = weatherData.filter((instance) => instance.dt_txt.includes('12:00:00')).slice(0, 5);
-    const forecastArray: Weather[] = noonData.map((instance) => {
+    const noonData = weatherData.filter((instance) => instance.dt_txt.includes('12:00:00'));
+    const forecastArray: Weather[] = noonData.slice(0, 5).map((instance) => {
       return new Weather (
-        currentWeather.cityName,
+        currentWeather.city,
         instance.dt_txt,
-        instance.main.temp,
-        instance.weather[0].description,
         instance.weather[0].icon,
-        instance.main.humidity,
-        instance.wind.speed
+        instance.weather[0].description,
+        instance.main.temp,
+        instance.wind.speed,
+        instance.main.humidity
       );
     });
     return forecastArray;
@@ -140,7 +141,7 @@ class WeatherService {
   // TODO: Complete getWeatherForCity method
   async getWeatherForCity(city: string) {
     try {
-      this.cityName = city;
+      this.city = city;
 
       const coordinates = await this.fetchAndDestructureLocationData() as Coordinates;
 
