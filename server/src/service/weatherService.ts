@@ -1,13 +1,13 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-// TODO: Define an interface for the Coordinates object
+// Define an interface for the Coordinates object to hold latitude and longitude
 interface Coordinates {
   lat: number;
   lon: number;
 }
 
-// TODO: Define a class for the Weather object
+// Define a class for the Weather object to store weather details
 class Weather {
   city: string;
   date: string;
@@ -17,7 +17,7 @@ class Weather {
   windSpeed: number;
   humidity: number;
 
-
+  // Constructor to initialize the Weather object with weather details
   constructor(
     city: string,
     date: string,
@@ -27,8 +27,13 @@ class Weather {
     windSpeed: number,
     humidity: number
   ) {
+    // Format the date and assign values to the instance
     this.city = city;
-    this.date = new Date(date).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' });
+    this.date = new Date(date).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
     this.icon = icon;
     this.iconDescription = iconDescription;
     this.tempF = tempF;
@@ -37,35 +42,34 @@ class Weather {
   }
 }
 
-// TODO: Complete the WeatherService class
+// WeatherService class handles API calls and processes weather data
 class WeatherService {
-  // TODO: Define the baseURL, API key, and city name properties
+  // Base URL, API key, and city name properties
   private baseURL?: string;
-
   private apiKey?: string;
-
   private city?: string;
 
+  // Constructor initializes the base URL and API key from environment variables
   constructor() {
-    this.baseURL = process.env.API_BASE_URL || '';
-    this.apiKey = process.env.API_KEY || '';
-    this.city = '';
+    this.baseURL = process.env.API_BASE_URL || "";
+    this.apiKey = process.env.API_KEY || "";
+    this.city = "";
   }
 
-  // TODO: Create fetchLocationData method
+  // Fetch location data (coordinates) from the OpenWeather API based on city name
   private async fetchLocationData(query: string) {
     try {
-      const response = await fetch(query);
-      const locationData = await response.json();
+      const response = await fetch(query); // Make API request
+      const locationData = await response.json(); // Parse the response JSON
       return locationData;
-
     } catch (err) {
-      console.log('Error: ', err);
+      // Log any errors encountered during the fetch
+      console.log("Error: ", err);
       return err;
     }
   }
 
-  // TODO: Create destructureLocationData method
+  // Destructure the coordinates from the location data
   private destructureLocationData(locationData: Coordinates): Coordinates {
     return {
       lat: locationData.lat,
@@ -73,42 +77,44 @@ class WeatherService {
     };
   }
 
-  // TODO: Create buildGeocodeQuery method
+  // Build the API query to fetch the geocode (coordinates) based on the city name
   private buildGeocodeQuery(): string {
     return `${this.baseURL}/geo/1.0/direct?q=${this.city}&limit=1&appid=${this.apiKey}`;
   }
 
-  // TODO: Create buildWeatherQuery method
+  // Build the API query to fetch the weather data using the coordinates
   private buildWeatherQuery(coordinates: Coordinates): string {
     return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
   }
 
-  // TODO: Create fetchAndDestructureLocationData method
+  // Fetch and destructure the location data to get the coordinates for the city
   private async fetchAndDestructureLocationData() {
     try {
-      const locationData = await this.fetchLocationData(this.buildGeocodeQuery());
-      return this.destructureLocationData(locationData[0]);
+      const locationData = await this.fetchLocationData(
+        this.buildGeocodeQuery() // Get location data
+      );
+      return this.destructureLocationData(locationData[0]); // Extract coordinates
     } catch (err) {
-      console.log('Error: ', err);
+      // Log any errors encountered during the process
+      console.log("Error: ", err);
       return err;
     }
   }
 
-  // TODO: Create fetchWeatherData method
+  // Fetch the weather data using the coordinates from the location data
   private async fetchWeatherData(coordinates: Coordinates) {
     try {
-      const response = await fetch(this.buildWeatherQuery(coordinates)
-      );
-
-      const weatherData = await response.json();
+      const response = await fetch(this.buildWeatherQuery(coordinates)); // Make API request for weather data
+      const weatherData = await response.json(); // Parse the weather data
       return weatherData;
     } catch (err) {
-      console.log('Error: ', err);
+      // Log any errors encountered during the fetch
+      console.log("Error: ", err);
       return err;
     }
   }
 
-  // TODO: Build parseCurrentWeather method
+  // Parse the current weather from the API response
   private parseCurrentWeather(response: any) {
     return new Weather(
       response.city.name,
@@ -121,11 +127,16 @@ class WeatherService {
     );
   }
 
-  // TODO: Complete buildForecastArray method
+  // Build an array of Weather objects for the 5-day forecast
   private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
-    const noonData = weatherData.filter((instance) => instance.dt_txt.includes('12:00:00'));
+    // Filter weather data to get the forecast for 12:00 PM each day
+    const noonData = weatherData.filter((instance) =>
+      instance.dt_txt.includes("12:00:00")
+    );
+
+    // Map each instance to a new Weather object and return an array of forecasts
     const forecastArray: Weather[] = noonData.slice(0, 5).map((instance) => {
-      return new Weather (
+      return new Weather(
         currentWeather.city,
         instance.dt_txt,
         instance.weather[0].icon,
@@ -138,25 +149,36 @@ class WeatherService {
     return forecastArray;
   }
 
-  // TODO: Complete getWeatherForCity method
+  // Main method to fetch weather data for a city, including current weather and 5-day forecast
   async getWeatherForCity(city: string) {
     try {
-      this.city = city;
+      this.city = city; // Set the city name
 
-      const coordinates = await this.fetchAndDestructureLocationData() as Coordinates;
+      // Fetch and destructure location data to get the coordinates
+      const coordinates =
+        (await this.fetchAndDestructureLocationData()) as Coordinates;
 
+      // Fetch weather data using the coordinates
       const weatherData = await this.fetchWeatherData(coordinates);
 
+      // Parse the current weather data
       const currentWeather = this.parseCurrentWeather(weatherData);
 
-      const forecast = this.buildForecastArray(currentWeather, weatherData.list);
+      // Build the 5-day forecast array
+      const forecast = this.buildForecastArray(
+        currentWeather,
+        weatherData.list
+      );
 
+      // Return an array with the current weather followed by the forecast
       return [currentWeather, ...forecast];
     } catch (err) {
-      console.log('Error: ', err);
+      // Log any errors encountered during the process
+      console.log("Error: ", err);
       return err;
     }
   }
 }
 
+// Export an instance of WeatherService for use in other parts of the application
 export default new WeatherService();
