@@ -58,8 +58,24 @@ class WeatherService {
 
   // Fetch location data (coordinates) from the OpenWeather API based on city name
   private async fetchLocationData(query: string) {
+    // Check if the API key is missing
+    if (!this.apiKey) {
+      throw new Error("API key is missing. Please add a valid API key.");
+    }
+
     try {
       const response = await fetch(query); // Make API request
+
+      // Check for invalid API key (status code 401)
+      if (response.status === 401) {
+        throw new Error("Invalid API key. Please check your API key.");
+      }
+
+      // Check for other errors, such as 404 or 500
+      if (!response.ok) {
+        throw new Error(`Error fetching location data: ${response.statusText}`);
+      }
+
       const locationData = await response.json(); // Parse the response JSON
       return locationData;
     } catch (err) {
@@ -103,8 +119,24 @@ class WeatherService {
 
   // Fetch the weather data using the coordinates from the location data
   private async fetchWeatherData(coordinates: Coordinates) {
+    // Check if the API key is missing
+    if (!this.apiKey) {
+      throw new Error("API key is missing. Please add a valid API key.");
+    }
+
     try {
       const response = await fetch(this.buildWeatherQuery(coordinates)); // Make API request for weather data
+
+      // Check for invalid API key (status code 401)
+      if (response.status === 401) {
+        throw new Error("Invalid API key. Please check your API key.");
+      }
+
+      // Check for other errors, such as 404 or 500
+      if (!response.ok) {
+        throw new Error(`Error fetching weather data: ${response.statusText}`);
+      }
+
       const weatherData = await response.json(); // Parse the weather data
       return weatherData;
     } catch (err) {
