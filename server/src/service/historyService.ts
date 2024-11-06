@@ -41,8 +41,10 @@ class HistoryService {
 
       // Try to parse the file contents; if parsing fails, return an empty array
       try {
-        parsedCities = [].concat(JSON.parse(cities));
+        parsedCities = JSON.parse(cities) || [];
       } catch (err) {
+        // Log the error if parsing fails and return an empty array as fallback
+        console.error("Error parsing JSON data from searchHistory.json:", err);
         parsedCities = [];
       }
 
