@@ -1,8 +1,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Router } from "express";
-const __filename = fileURLToPath(import.meta.url); // Get the current file's URL
-const __dirname = path.dirname(__filename); // Get the directory name of the current file
+
+// Get the current file's URL
+const __filename = fileURLToPath(import.meta.url);
+
+// Get the directory name of the current file
+const __dirname = path.dirname(__filename);
+
+// Initialize a new router
 const router = Router();
 
 // Define route to serve the index.html file
